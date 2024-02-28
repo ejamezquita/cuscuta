@@ -106,7 +106,7 @@ def main():
                 # - We are going to get a sense of what's the 80th quantile value of all the remaining non-zero skewer pixels in the red channel
                 # - Then threshold the hold patch
 
-                median = ndimage.median_filter(patch[:,:,1], size=11)
+                median = ndimage.median_filter(patch[:,:,1], size=7)
                 skewer = skewers[:,:,1].copy()
                     
                 nonzeroratio = np.sum(skewer > 0)/skewer.size
@@ -114,7 +114,8 @@ def main():
                 if len(skewer[skewer > 0]) < 10:
                     threshold = mind
                 else:
-                    threshold = np.quantile(skewer[skewer > mind], 1 - nonzeroratio)
+                    q = np.max([0.25, (1 - nonzeroratio)*0.5])
+                    threshold = np.quantile(skewer[skewer > mind], q)
                     threshold = np.min([115, threshold])
                     threshold = np.max([mind, threshold])
                 
@@ -151,7 +152,7 @@ def main():
                     
                 f_ratio = np.divide(*np.sort(feret, axis=1).T) 
                 comp_mask = ( (feret[:,1] > 30) | (f_ratio > 0.35) | (dtouch < 5) ) & (comp_size > 100) & (dtouch < 75) & (f_ratio > 0.075)
-                size_mask = comp_size/np.sum(comp_size[comp_mask]) > 0.06
+                size_mask = comp_size/np.sum(comp_size[comp_mask]) > 0.04
                 mask = comp_mask & size_mask
                 box = np.zeros_like(labels).astype(bool)
                 comp_labels = np.nonzero(mask)[0]
